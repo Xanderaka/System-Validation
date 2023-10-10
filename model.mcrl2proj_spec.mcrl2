@@ -2,7 +2,7 @@ sort SoundAlarm = struct Critical | Maintenance | Reset;
      IndicatorCoolingSystem = struct Green | Red;
      CoolingUnits = struct Start | Stop | HasStopped | IsRunning;
      TemperatureSensor = struct Start | Stop | HasStopped | IsRunning;
-     CoolingSystem = struct StartPressed | StopPressed | ResetPressed | IsOn | IsOff | InErrorState;
+     CoolingSystem = struct StartPressed | StopPressed | ResetPressed | ButtonUp | ButtonDown | IsOn | IsOff | InErrorState;
      IndicatorBrokenComponent = struct CoolingUnit | TemperatureSensor, struct ColorGray | ColorOrange;
      
      
