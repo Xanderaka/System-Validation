@@ -7,3 +7,9 @@ sort SoundAlarm = struct Critical | Maintenance | Reset;
      
      
 act SoundAlarm, IndicatorCoolingSystem, CoolingUnits, TemperatureSensors, CoolingSystem, SetTemperature, IndicatorBrokenComponent, ReceiveTemperature, ReceiveInfoCoolerUnits, ReceiveInfoTemperatureSensors
+
+proc 
+
+
+
+init
