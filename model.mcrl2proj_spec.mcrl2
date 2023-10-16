@@ -1,15 +1,30 @@
-sort SoundAlarm = struct Critical | Maintenance | Reset;
+sort AlarmStatus = struct Critical | Maintenance | IsReset;
      IndicatorCoolingSystem = struct Green | Red;
-     CoolingUnits = struct Start | Stop | HasStopped | IsRunning;
-     TemperatureSensor = struct Start | Stop | HasStopped | IsRunning;
-     CoolingSystem = struct StartPressed | StopPressed | ResetPressed | ButtonUp | ButtonDown | IsOn | IsOff | InErrorState;
-     IndicatorBrokenComponent = struct CoolingUnit | TemperatureSensor, struct ColorGray | ColorOrange;
+	 IndicatorBrokenCoolingUnit = struct ColorGray | ColorOrange;
+	 IndicatorBrokenTemperatureSensor = struct ColorGray | ColorOrange;
+     CoolingUnitStatus = struct HasStopped | IsRunning | IsBroken;
+     TemperatureSensorStatus = struct HasStopped | IsRunning | IsBroken;
+     CoolingSystem = struct IsOn | IsOff | InErrorState;
+     
+
      
      
-act SoundAlarm, IndicatorCoolingSystem, CoolingUnits, TemperatureSensors, CoolingSystem, SetTemperature, IndicatorBrokenComponent, ReceiveTemperature, ReceiveInfoCoolerUnits, ReceiveInfoTemperatureSensors
+act SoundAlarm, ResetAlarm: AlarmStatus;
+	IndicateCoolingSystem: IndicatorCoolingSystem;
+	IndicateBrokenCoolingUnit: IndicatorBrokenCoolingUnit;
+	IndicateBrokenTemperatureSensor: IndicatorBrokenTemperatureSensor; 
+	ReceiveStatusCoolingUnit: CoolingUnitStatus;
+	ReceiveStatusTemperatureSensor: TemperatureSensorStatus;
+	StartPressed, StopPressed, ResetPressed, ButtonUp, ButtonDown, StartCoolingUnit, StopCoolingUnit;
+	SetTemperature, ReceiveTemperature: Int;
+	
 
 proc 
 
 
 
 init
+
+	allow
+
+	comm
