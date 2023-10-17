@@ -5,6 +5,7 @@ sort AlarmStatus = struct Critical | Maintenance | IsReset;
      CoolingUnitStatus = struct HasStopped | IsRunning | IsBroken;
      TemperatureSensorStatus = struct HasStopped | IsRunning | IsBroken;
      CoolingSystem = struct IsOn | IsOff | InErrorState;
+	 TemperatureStatus = Above | Below | Stable
      
 
      
@@ -16,7 +17,7 @@ act SoundAlarm, ResetAlarm: AlarmStatus;
 	ReceiveStatusCoolingUnit: CoolingUnitStatus;
 	ReceiveStatusTemperatureSensor: TemperatureSensorStatus;
 	StartPressed, StopPressed, ResetPressed, ButtonUp, ButtonDown, StartCoolingUnit, StopCoolingUnit;
-	SetTemperature, ReceiveTemperature: Int;
+	SetTemperature, ReceiveTemperature: TemperatureStatus;
 	
 
 proc 
