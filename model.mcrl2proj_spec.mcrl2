@@ -1,31 +1,67 @@
 sort AlarmStatus = struct Critical | Maintenance | IsReset;
      IndicatorCoolingSystem = struct Green | Red;
 	 IndicatorBrokenCoolingUnit = struct ColorGray | ColorOrange;
-	 IndicatorBrokenTemperatureSensor = struct ColorGray | ColorOrange;
-     CoolingUnitStatus = struct HasStopped | IsRunning | IsBroken;
-     TemperatureSensorStatus = struct HasStopped | IsRunning | IsBroken;
-     CoolingSystem = struct IsOn | IsOff | InErrorState;
-	 TemperatureStatus = Above | Below | Stable
-     
+	 IndicatorBrokenTemperatureSensor = struct GrayColor | OrangeColor;
+     CoolingUnitStatus = struct Stopped | Running | NoneBroken | OneBroken | AllBroken;
+     TemperatureSensorStatus = struct HasStopped | IsRunning | NoneAreBroken | OneIsBroken | AllAreBroken;
+     CoolingSystem = struct On | Off | InErrorState;
+	 TemperatureStatus = struct Above | Below | OnTemperature;
+	 CoolingStatus = struct CoolingDown | WarmingUp | Maintain;
 
-     
-     
+      
 act SoundAlarm, ResetAlarm: AlarmStatus;
 	IndicateCoolingSystem: IndicatorCoolingSystem;
 	IndicateBrokenCoolingUnit: IndicatorBrokenCoolingUnit;
 	IndicateBrokenTemperatureSensor: IndicatorBrokenTemperatureSensor; 
 	ReceiveStatusCoolingUnit: CoolingUnitStatus;
 	ReceiveStatusTemperatureSensor: TemperatureSensorStatus;
-	StartPressed, StopPressed, ResetPressed, ButtonUp, ButtonDown, StartCoolingUnit, StopCoolingUnit;
+	ReceiveInput, StartPressed, StopPressed, ResetPressed, ButtonUp, ButtonDown, ResetCoolingUnit, StartCoolingUnit, StopCoolingUnit, StartTemperatureSensor, StopTemperatureSensor, IsOnTemperature;
 	SetTemperature, ReceiveTemperature: TemperatureStatus;
 	
 
-proc 
+proc HandleInput(systemStatus:CoolingSystem) = 
+	 	(StartPressed.(systemStatus==Off) -> StartCoolingUnit.HandleInput(systemStatus=On)) %if start is pressed
+	 	+ 
+	 	(StopPressed.(systemStatus==On) -> StopCoolingUnit.HandleInput(systemStatus=Off)) %if stop is pressed
+	 	+
+	 	(ResetPressed.(systemStatus==InErrorState) -> HandleInput(systemStatus=On)); %if reset is pressed
+		
+
+	 RegulateTemperature(status: TemperatureStatus, cooling: CoolingStatus) = 
+		((status==Above && (cooling==WarmingUp || cooling==Maintain)) -> StartCoolingUnit.RegulateTemperature(status=Above, cooling=CoolingDown))
+		+
+		((status==Below && (cooling==CoolingDown || cooling==Maintain)) -> StopCoolingUnit.RegulateTemperature(status=Below, cooling=WarmingUp))
+		+
+		((cooling==CoolingDown) -> IsOnTemperature.RegulateTemperature(status=OnTemperature, cooling=Maintain))
+		+
+		((cooling==WarmingUp) -> IsOnTemperature.RegulateTemperature(status=OnTemperature, cooling=Maintain));
+	
+	
+	 ErrorHandling(status1:CoolingUnitStatus, status2:TemperatureSensorStatus, 		
+					ErrorStatus:Bool, MaintenanceStatus:Bool) = 
+		(ErrorStatus) -> ResetPressed.SoundAlarm(IsReset).
+		 ErrorHandling(status1=NoneBroken, 			
+		 status2=NoneAreBroken, ErrorStatus = false) <>
+		(MaintenanceStatus) -> ResetPressed.SoundAlarm(IsReset).
+		 IndicateBrokenTemperatureSensor(GrayColor).
+		 IndicateBrokenCoolingUnit(ColorGray).
+		 ErrorHandling(status1=NoneBroken, 			
+		 status2=NoneAreBroken, MaintenanceStatus = false) <>
+		(!ErrorStatus) -> ((status1 == AllBroken || status2 == AllAreBroken) -> 
+		SoundAlarm(Critical).ErrorHandling(ErrorStatus=true) <> (!MaintenanceStatus) -> 
+		((status1 == OneBroken && status2 == OneIsBroken)-> 
+		IndicateBrokenCoolingUnit(ColorOrange).
+		IndicateBrokenTemperatureSensor(OrangeColor)
+		.SoundAlarm(Maintenance) <> 
+		((status1 == OneBroken || status2 == OneIsBroken)
+		-> (status1 == OneBroken) -> 
+		(IndicateBrokenCoolingUnit(ColorOrange).
+		SoundAlarm(Maintenance).StartCoolingUnit) +
+		(status2 == OneIsBroken) -> IndicateBrokenTemperatureSensor(OrangeColor) 		
+		.SoundAlarm(Maintenance).StartTemperatureSensor)).
+		ErrorHandling(MaintenanceStatus=true) + 
+		(status1 == NoneBroken && status2 == 
+		NoneAreBroken)-> ButtonUp);
 
 
-
-init
-
-	allow
-
-	comm
+init HandleInput(Off) || RegulateTemperature(Below, Maintain) || ErrorHandling(OneBroken, AllAreBroken, false, false);
