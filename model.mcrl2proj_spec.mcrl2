@@ -17,12 +17,13 @@ act SoundAlarm, ResetAlarm: AlarmStatus;
 	ReceiveStatusTemperatureSensor: TemperatureSensorStatus;
 	ReceiveInput, StartPressed, StopPressed, ResetPressed, ButtonUp, ButtonDown, ResetCoolingUnit, StartCoolingUnit, StopCoolingUnit, StartTemperatureSensor, StopTemperatureSensor, IsOnTemperature;
 	SetTemperature, ReceiveTemperature: TemperatureStatus;
+	TurnCoolingUnit: CoolingSystem;
 	
 
 proc HandleInput(systemStatus:CoolingSystem) = 
-	 	(StartPressed.(systemStatus==Off) -> StartCoolingUnit.HandleInput(systemStatus=On)) %if start is pressed
+	 	(StartPressed.(systemStatus==Off) -> TurnCoolingUnit(On).HandleInput(systemStatus=On)) %if start is pressed
 	 	+ 
-	 	(StopPressed.(systemStatus==On) -> StopCoolingUnit.HandleInput(systemStatus=Off)) %if stop is pressed
+	 	(StopPressed.(systemStatus==On) -> TurnCoolingUnit(Off).HandleInput(systemStatus=Off)) %if stop is pressed
 	 	+
 	 	(ResetPressed.(systemStatus==InErrorState) -> HandleInput(systemStatus=On)); %if reset is pressed
 		
