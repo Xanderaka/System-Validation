@@ -2,5 +2,18 @@
  <spec>model.mcrl2proj_spec.mcrl2</spec>
  <properties>
   <property>Deadlock free</property>
+  <property>11</property>
+  <property>9a</property>
+  <property>9b</property>
+  <property>9c</property>
+  <property>8</property>
+  <property>6</property>
+  <property>5a</property>
+  <property>5b</property>
+  <property>5c_needsmoreinfo</property>
+  <property>4a</property>
+  <property>4b</property>
+  <property>4c_needmoreinfo</property>
+  <property>3_needsmoreinfo</property>
  </properties>
 </root>
