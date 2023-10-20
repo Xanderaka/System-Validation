@@ -1,1 +1,1 @@
-[!StopPressed*.CheckSystemStatus(Off)]false
+[!StopPressed*.TurnCoolingSystem(Off)]false
