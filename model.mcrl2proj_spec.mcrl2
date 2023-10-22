@@ -15,29 +15,33 @@ act SoundAlarm, ResetAlarm: AlarmStatus;
 	IndicateBrokenTemperatureSensor: IndicatorBrokenTemperatureSensor; 
 	ReceiveStatusCoolingUnit, SendStatusCoolingUnit: CoolingUnitStatus;
 	ReceiveStatusTemperatureSensor, SendStatusTemperatureSensor: TemperatureSensorStatus;
-	ReceiveInput, StartPressed, StopPressed, ResetPressed, ButtonUp, ButtonDown, ResetCoolingUnit, StartCoolingUnit, StopCoolingUnit, StartTemperatureSensor, StopTemperatureSensor, IsOnTemperature;
-	SetTemperature, ReceiveTemperature: TemperatureStatus;
+	ReceiveInput, StartPressed, StopPressed, ResetPressed, ButtonUp, ButtonDown, ResetCoolingUnit, StartCoolingUnit, StopCoolingUnit, StartTemperatureSensor, StopTemperatureSensor, IsOnTemperature, SetTemperature;
+	ReceiveTemperature: TemperatureStatus;
 	TurnCoolingSystem: CoolingSystem;
 	
 
 proc System(systemStatus:CoolingSystem) = 
 	 	(StartPressed.(systemStatus==Off) -> (TurnCoolingSystem(On).System(systemStatus=On)). %if start is pressed
 		((systemStatus==InErrorState) -> (ErrorHandling(status1=Stopped, status2=HasStopped, ErrorStatus=false, MaintenanceStatus=false)) <> %check if system is in error state, if so go to error handling
-		(RegulateTemperature(status=OnTemperature, cooling=Maintain)))) %if system is not in error state go to regulate temperature
+		(SetTemperature.RegulateTemperature(status=OnTemperature, cooling=Maintain)))) %if system is not in error state go to regulate temperature
 	 	+ 
 	 	(StopPressed.(systemStatus==On) -> TurnCoolingSystem(Off).System(systemStatus=Off)) %if stop is pressed
 	 	+
 	 	(ResetPressed.(systemStatus==InErrorState) -> System(systemStatus=On)); %if reset is pressed
 		
 
-	 RegulateTemperature(status: TemperatureStatus, cooling: CoolingStatus) = 
-		((status==Above && (cooling==WarmingUp || cooling==Maintain)) -> StartCoolingUnit.RegulateTemperature(status=Above, cooling=CoolingDown))
+	 RegulateTemperature(status: TemperatureStatus, cooling: CoolingStatus, sensor: TemperatureSensorStatus, unit: CoolingUnitStatus) = 
+		(ReceiveStatusTemperatureSensor(sensor).ReceiveStatusCoolingUnit(unit).CheckComponents(temperatureSensor=sensor, coolingUnit=unit) )
 		+
-		((status==Below && (cooling==CoolingDown || cooling==Maintain)) -> StopCoolingUnit.RegulateTemperature(status=Below, cooling=WarmingUp))
+		((sensor==NoneAreBroken && unit==NoneBroken) ->
+		( ((status==Above && (cooling==WarmingUp || cooling==Maintain)) -> StartCoolingUnit.RegulateTemperature(status=Above, cooling=CoolingDown, sensor=IsRunning, unit=Running))
 		+
-		((cooling==CoolingDown) -> IsOnTemperature.RegulateTemperature(status=OnTemperature, cooling=Maintain))
+		((status==Below && (cooling==CoolingDown || cooling==Maintain)) -> StopCoolingUnit.RegulateTemperature(status=Below, cooling=WarmingUp, sensor=IsRunning, unit=Stopped))
 		+
-		((cooling==WarmingUp) -> IsOnTemperature.RegulateTemperature(status=OnTemperature, cooling=Maintain))
+		((cooling==CoolingDown) -> IsOnTemperature.RegulateTemperature(status=OnTemperature, cooling=Maintain, sensor=IsRunning, unit=Stopped))
+		+
+		((cooling==WarmingUp) -> IsOnTemperature.RegulateTemperature(status=OnTemperature, cooling=Maintain, sensor=IsRunning, unit=Stopped)) ))
+
 		+ 
 		(StopPressed.TurnCoolingSystem(Off).System(systemStatus=Off)); %turn system off when stop is pressed
 
@@ -77,4 +81,4 @@ proc System(systemStatus:CoolingSystem) =
 		(StopPressed.TurnCoolingSystem(Off).System(systemStatus=Off)); %turn system off when stop is pressed;
 
 
-init System(Off) || RegulateTemperature(Below, Maintain) || ErrorHandling(OneBroken, AllAreBroken, false, false);
+init System(Off) || RegulateTemperature(OnTemperature, Maintain, HasStopped, Stopped) || CheckComponents(HasStopped, Stopped) || ErrorHandling(OneBroken, AllAreBroken, false, false);
