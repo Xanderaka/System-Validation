@@ -23,7 +23,7 @@ act SoundAlarm, ResetAlarm: AlarmStatus;
 proc System(systemStatus:CoolingSystem) = 
 	 	(StartPressed.(systemStatus==Off) -> (TurnCoolingSystem(On).System(systemStatus=On)). %if start is pressed
 		((systemStatus==InErrorState) -> (ErrorHandling(status1=Stopped, status2=HasStopped, ErrorStatus=false, MaintenanceStatus=false)) <> %check if system is in error state, if so go to error handling
-		(SetTemperature.RegulateTemperature(status=OnTemperature, cooling=Maintain)))) %if system is not in error state go to regulate temperature
+		(SetTemperature.RegulateTemperature(status=OnTemperature, cooling=Maintain, sensor=HasStopped, unit=Stopped)))) %if system is not in error state go to regulate temperature
 	 	+ 
 	 	(StopPressed.(systemStatus==On) -> TurnCoolingSystem(Off).System(systemStatus=Off)) %if stop is pressed
 	 	+
@@ -47,9 +47,9 @@ proc System(systemStatus:CoolingSystem) =
 
 
 	 CheckComponents(temperatureSensor: TemperatureSensorStatus, coolingUnit: CoolingUnitStatus)=
-		( (temperatureSensor==NoneAreBroken && coolingUnit==NoneBroken) -> (SendStatusTemperatureSensor(NoneAreBroken).SendStatusCoolingUnit(NoneBroken).RegulateTemperature()) <> %if none of the components are broken
-		( (temperatureSensor==OneIsBroken || coolingUnit==OneBroken) -> (SendStatusTemperatureSensor(OneIsBroken).SendStatusCoolingUnit(OneBroken).RegulateTemperature()) <>  %if one of the components is broken
-		( (temperatureSensor==AllAreBroken || coolingUnit==AllBroken) -> SendStatusTemperatureSensor(OneIsBroken).SendStatusCoolingUnit(OneBroken).RegulateTemperature() ) ) ) %if all the components are broken
+		( (temperatureSensor==NoneAreBroken && coolingUnit==NoneBroken) -> (SendStatusTemperatureSensor(NoneAreBroken).SendStatusCoolingUnit(NoneBroken).RegulateTemperature(status=OnTemperature, cooling=Maintain, sensor=HasStopped, unit=Stopped)) <> %if none of the components are broken
+		( (temperatureSensor==OneIsBroken || coolingUnit==OneBroken) -> (SendStatusTemperatureSensor(OneIsBroken).SendStatusCoolingUnit(OneBroken).RegulateTemperature(status=OnTemperature, cooling=Maintain, sensor=HasStopped, unit=Stopped)) <>  %if one of the components is broken
+		( (temperatureSensor==AllAreBroken || coolingUnit==AllBroken) -> SendStatusTemperatureSensor(OneIsBroken).SendStatusCoolingUnit(OneBroken).RegulateTemperature(status=OnTemperature, cooling=Maintain, sensor=HasStopped, unit=Stopped) ) ) ) %if all the components are broken
 		+ 
 		(StopPressed.TurnCoolingSystem(Off).System(systemStatus=Off)); %turn system off when stop is pressed
 	
