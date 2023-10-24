@@ -33,15 +33,11 @@ proc System(systemStatus:CoolingSystem, alarm:AlarmStatus) =
 	 	(systemStatus==Off) -> (ReceiveButton(Start).TurnCoolingSystem(On).IndicateCoolingSystem(Green).System(systemStatus=On)+ReceiveButton(Stop).System(Off,Functional)) <> %if start is pressed
 	 	((systemStatus==On) -> ((alarm==Critical)-> ((TurnCoolingSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off))+(ReceiveButton(Reset).System(alarm=Functional)))) + (alarm!=Critical) -> (RequestCoolingUnitStatus.(CheckCoolingUnitStatus(NoneBroken)+CheckCoolingUnitStatus(SomeBroken)+CheckCoolingUnitStatus(AllBroken))+ ReceiveButton(Stop).TurnCoolingSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off))); %if stop is pressed
 
-	 CheckCoolingUnitStatus(coolingUnit: CoolingUnitComponentStatus, working: CoolingUnitWorking)=
-%		(coolingUnit==NoneBroken) -> (RequestTemperatureSensorStatus.(CheckTemperatureSensor(NoneAreBroken) + CheckTemperatureSensor(SomeAreBroken) + CheckTemperatureSensor(AllAreBroken))) +
-%		(coolingUnit==SomeBroken) -> (IndicateBrokenCoolingUnit(ColorOrange).(RequestTemperatureSensorStatus.(CheckTemperatureSensor(NoneAreBroken) + CheckTemperatureSensor(SomeAreBroken) + CheckTemperatureSensor(AllAreBroken)))) +
-%		(coolingUnit==AllBroken) -> (GoCritical.System(On,Critical)) +
-		sum number:NumberOfCoolingUnits.
-			(number == one) -> (working == true) -> succ(AmountCoolingUnitsWorking) +
-			(number == two) -> (working == true) -> succ(AmountCoolingUnitsWorking) +
-			(number == three) -> (working == true) -> succ(AmountCoolingUnitsWorking);
-	%	(AmountCoolingUnitsWorking==0) -> 
+	 CheckCoolingUnitStatus(coolingUnit: CoolingUnitComponentStatus)=
+		(coolingUnit==NoneBroken) -> (RequestTemperatureSensorStatus.(CheckTemperatureSensor(NoneAreBroken) + CheckTemperatureSensor(SomeAreBroken) + CheckTemperatureSensor(AllAreBroken))) +
+		(coolingUnit==SomeBroken) -> (IndicateBrokenCoolingUnit(ColorOrange).(RequestTemperatureSensorStatus.(CheckTemperatureSensor(NoneAreBroken) + CheckTemperatureSensor(SomeAreBroken) + CheckTemperatureSensor(AllAreBroken)))) +
+		(coolingUnit==AllBroken) -> (GoCritical.System(On,Critical));
+
 
 	CheckTemperatureSensor(temperatureSensor: TemperatureSensorComponentStatus)=
 		(temperatureSensor==NoneAreBroken) -> (CheckTemperatureLevels.(RegulateTemperature(Above)+RegulateTemperature(EqualOrBelow)))+
