@@ -1,84 +1,60 @@
-sort AlarmStatus = struct Critical | Maintenance | IsReset;
+sort AlarmStatus = struct Critical | Functional;
      IndicatorCoolingSystem = struct Green | Red;
 	 IndicatorBrokenCoolingUnit = struct ColorGray | ColorOrange;
 	 IndicatorBrokenTemperatureSensor = struct GrayColor | OrangeColor;
-     CoolingUnitStatus = struct Stopped | Running | NoneBroken | OneBroken | AllBroken;
-     TemperatureSensorStatus = struct HasStopped | IsRunning | NoneAreBroken | OneIsBroken | AllAreBroken;
-     CoolingSystem = struct On | Off | InErrorState;
-	 TemperatureStatus = struct Above | Below | OnTemperature;
-	 CoolingStatus = struct CoolingDown | WarmingUp | Maintain;
+     CoolingUnitStatus = struct Stopped | Running;
+	 CoolingUnitComponentStatus = struct NoneBroken | SomeBroken | AllBroken;
+     TemperatureSensorStatus = struct HasStopped | IsRunning;
+	 TemperatureSensorComponentStatus = struct NoneAreBroken | SomeAreBroken | AllAreBroken;
+     CoolingSystem = struct On | Off;
+	 TemperatureStatus = struct Above | EqualOrBelow;
+	 ButtonType = struct Start | Stop | Reset | Up | Down;
+     CoolingUnitWorking = Bool;
+	 TemperatureSensorWorking = Bool;
+	 NumberOfCoolingUnits = struct one | two |three;
+ 
+map AmountCoolingUnitsWorking: Nat;
+	crying: Nat;
 
-      
+eqn AmountCoolingUnitsWorking = 0;
+	crying = succ(AmountCoolingUnitsWorking);
+
 act SoundAlarm, ResetAlarm: AlarmStatus;
 	IndicateCoolingSystem: IndicatorCoolingSystem;
 	IndicateBrokenCoolingUnit: IndicatorBrokenCoolingUnit;
 	IndicateBrokenTemperatureSensor: IndicatorBrokenTemperatureSensor; 
 	ReceiveStatusCoolingUnit, SendStatusCoolingUnit: CoolingUnitStatus;
+	ReceiveButton: ButtonType;
 	ReceiveStatusTemperatureSensor, SendStatusTemperatureSensor: TemperatureSensorStatus;
-	ReceiveInput, StartPressed, StopPressed, ResetPressed, ButtonUp, ButtonDown, ResetCoolingUnit, StartCoolingUnit, StopCoolingUnit, StartTemperatureSensor, StopTemperatureSensor, IsOnTemperature, SetTemperature;
+	StartCoolingUnit, StopCoolingUnit, CheckTemperatureLevels, RequestCoolingUnitStatus, RequestTemperatureSensorStatus, GoCritical;
 	ReceiveTemperature: TemperatureStatus;
 	TurnCoolingSystem: CoolingSystem;
 	
 
-proc System(systemStatus:CoolingSystem) = 
-	 	(StartPressed.(systemStatus==Off) -> (TurnCoolingSystem(On).System(systemStatus=On)). %if start is pressed
-		((systemStatus==InErrorState) -> (ErrorHandling(status1=Stopped, status2=HasStopped, ErrorStatus=false, MaintenanceStatus=false)) <> %check if system is in error state, if so go to error handling
-		(SetTemperature.RegulateTemperature(status=OnTemperature, cooling=Maintain, sensor=HasStopped, unit=Stopped)))) %if system is not in error state go to regulate temperature
-	 	+ 
-	 	(StopPressed.(systemStatus==On) -> TurnCoolingSystem(Off).System(systemStatus=Off)) %if stop is pressed
-	 	+
-	 	(ResetPressed.(systemStatus==InErrorState) -> System(systemStatus=On)); %if reset is pressed
-		
+proc System(systemStatus:CoolingSystem, alarm:AlarmStatus) = 
+	 	(systemStatus==Off) -> (ReceiveButton(Start).TurnCoolingSystem(On).IndicateCoolingSystem(Green).System(systemStatus=On)+ReceiveButton(Stop).System(Off,Functional)) <> %if start is pressed
+	 	((systemStatus==On) -> ((alarm==Critical)-> ((TurnCoolingSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off))+(ReceiveButton(Reset).System(alarm=Functional)))) + (alarm!=Critical) -> (RequestCoolingUnitStatus.(CheckCoolingUnitStatus(true))+ ReceiveButton(Stop).TurnCoolingSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off))); %if stop is pressed
 
-	 RegulateTemperature(status: TemperatureStatus, cooling: CoolingStatus, sensor: TemperatureSensorStatus, unit: CoolingUnitStatus) = 
-		(ReceiveStatusTemperatureSensor(sensor).ReceiveStatusCoolingUnit(unit).CheckComponents(temperatureSensor=sensor, coolingUnit=unit) )
-		+
-		((sensor==NoneAreBroken && unit==NoneBroken) ->
-		( ((status==Above && (cooling==WarmingUp || cooling==Maintain)) -> StartCoolingUnit.RegulateTemperature(status=Above, cooling=CoolingDown, sensor=IsRunning, unit=Running))
-		+
-		((status==Below && (cooling==CoolingDown || cooling==Maintain)) -> StopCoolingUnit.RegulateTemperature(status=Below, cooling=WarmingUp, sensor=IsRunning, unit=Stopped))
-		+
-		((cooling==CoolingDown) -> IsOnTemperature.RegulateTemperature(status=OnTemperature, cooling=Maintain, sensor=IsRunning, unit=Stopped))
-		+
-		((cooling==WarmingUp) -> IsOnTemperature.RegulateTemperature(status=OnTemperature, cooling=Maintain, sensor=IsRunning, unit=Stopped)) ))
-
-		+ 
-		(StopPressed.TurnCoolingSystem(Off).System(systemStatus=Off)); %turn system off when stop is pressed
+	 CheckCoolingUnitStatus(working:CoolingUnitWorking)=
+%		(coolingUnit==NoneBroken) -> (RequestTemperatureSensorStatus.(CheckTemperatureSensor(NoneAreBroken) + CheckTemperatureSensor(SomeAreBroken) + CheckTemperatureSensor(AllAreBroken))) +
+%		(coolingUnit==SomeBroken) -> (IndicateBrokenCoolingUnit(ColorOrange).(RequestTemperatureSensorStatus.(CheckTemperatureSensor(NoneAreBroken) + CheckTemperatureSensor(SomeAreBroken) + CheckTemperatureSensor(AllAreBroken)))) +
+%		(coolingUnit==AllBroken) -> (GoCritical.System(On,Critical));
+		sum amount:NumberOfCoolingUnits.
+			((amount==one) -> (working == true) -> crying +
+			(amount==two) -> (working == true) -> crying +
+			(amount==three) -> (working == true) -> crying)+
+		(crying == 0) -> (GoCritical.System(On,Critical)) + 
+		(crying == 3) -> (RequestTemperatureSensorStatus.(CheckTemperatureSensor(NoneAreBroken) + CheckTemperatureSensor(SomeAreBroken) + CheckTemperatureSensor(AllAreBroken))) +
+		(crying ==1 || AmountCoolingUnitsWorking == 2) -> (IndicateBrokenCoolingUnit(ColorOrange).(RequestTemperatureSensorStatus.(CheckTemperatureSensor(NoneAreBroken) + CheckTemperatureSensor(SomeAreBroken) + CheckTemperatureSensor(AllAreBroken))));
 
 
-	 CheckComponents(temperatureSensor: TemperatureSensorStatus, coolingUnit: CoolingUnitStatus)=
-		( (temperatureSensor==NoneAreBroken && coolingUnit==NoneBroken) -> (SendStatusTemperatureSensor(NoneAreBroken).SendStatusCoolingUnit(NoneBroken).RegulateTemperature(status=OnTemperature, cooling=Maintain, sensor=HasStopped, unit=Stopped)) <> %if none of the components are broken
-		( (temperatureSensor==OneIsBroken || coolingUnit==OneBroken) -> (SendStatusTemperatureSensor(OneIsBroken).SendStatusCoolingUnit(OneBroken).RegulateTemperature(status=OnTemperature, cooling=Maintain, sensor=HasStopped, unit=Stopped)) <>  %if one of the components is broken
-		( (temperatureSensor==AllAreBroken || coolingUnit==AllBroken) -> SendStatusTemperatureSensor(OneIsBroken).SendStatusCoolingUnit(OneBroken).RegulateTemperature(status=OnTemperature, cooling=Maintain, sensor=HasStopped, unit=Stopped) ) ) ) %if all the components are broken
-		+ 
-		(StopPressed.TurnCoolingSystem(Off).System(systemStatus=Off)); %turn system off when stop is pressed
-	
-	 ErrorHandling(status1:CoolingUnitStatus, status2:TemperatureSensorStatus, ErrorStatus:Bool, MaintenanceStatus:Bool) = 
-		(ErrorStatus) -> ResetPressed.SoundAlarm(IsReset).
-		 ErrorHandling(status1=NoneBroken, 			
-		 status2=NoneAreBroken, ErrorStatus = false) <>
-		(MaintenanceStatus) -> ResetPressed.SoundAlarm(IsReset).
-		 IndicateBrokenTemperatureSensor(GrayColor).
-		 IndicateBrokenCoolingUnit(ColorGray).
-		 ErrorHandling(status1=NoneBroken, 			
-		 status2=NoneAreBroken, MaintenanceStatus = false) <>
-		(!ErrorStatus) -> ((status1 == AllBroken || status2 == AllAreBroken) -> 
-		SoundAlarm(Critical).ErrorHandling(ErrorStatus=true) <> (!MaintenanceStatus) -> 
-		((status1 == OneBroken && status2 == OneIsBroken)-> 
-		IndicateBrokenCoolingUnit(ColorOrange).
-		IndicateBrokenTemperatureSensor(OrangeColor)
-		.SoundAlarm(Maintenance) <> 
-		((status1 == OneBroken || status2 == OneIsBroken)
-		-> (status1 == OneBroken) -> 
-		(IndicateBrokenCoolingUnit(ColorOrange).
-		SoundAlarm(Maintenance).StartCoolingUnit) +
-		(status2 == OneIsBroken) -> IndicateBrokenTemperatureSensor(OrangeColor) 		
-		.SoundAlarm(Maintenance).StartTemperatureSensor)).
-		ErrorHandling(MaintenanceStatus=true) + 
-		(status1 == NoneBroken && status2 == 
-		NoneAreBroken)-> ButtonUp)
-		+
-		(StopPressed.TurnCoolingSystem(Off).System(systemStatus=Off)); %turn system off when stop is pressed;
+	CheckTemperatureSensor(temperatureSensor: TemperatureSensorComponentStatus)=
+		(temperatureSensor==NoneAreBroken) -> (CheckTemperatureLevels.(RegulateTemperature(Above)+RegulateTemperature(EqualOrBelow)))+
+		(temperatureSensor==SomeAreBroken) -> (IndicateBrokenTemperatureSensor(OrangeColor).CheckTemperatureLevels.(RegulateTemperature(Above)+RegulateTemperature(EqualOrBelow))) +
+		(temperatureSensor==AllAreBroken) -> (GoCritical.System(On,Critical));
 
+	RegulateTemperature(status: TemperatureStatus)=
+		(status==Above) -> ((ReceiveButton(Down).StartCoolingUnit+StartCoolingUnit).System(On,Functional) + ReceiveButton(Up).(RegulateTemperature(EqualOrBelow) + RegulateTemperature(Above))) +
+		(status==EqualOrBelow) -> ((ReceiveButton(Up).StopCoolingUnit+StopCoolingUnit).(RequestTemperatureSensorStatus.(CheckTemperatureSensor(NoneAreBroken) + CheckTemperatureSensor(SomeAreBroken) + CheckTemperatureSensor(AllAreBroken))) + (ReceiveButton(Down).(RegulateTemperature(EqualOrBelow)+RegulateTemperature(Above))));
 
-init System(Off) || RegulateTemperature(OnTemperature, Maintain, HasStopped, Stopped) || CheckComponents(HasStopped, Stopped) || ErrorHandling(OneBroken, AllAreBroken, false, false);
+init System(Off, Functional); 
