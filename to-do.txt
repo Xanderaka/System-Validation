@@ -1,0 +1,6 @@
+Things to do:
+-Make temparatureRegulation and CheckComponentsStatus parallel (Also make inside componentStatus, TemperatureSenor and CoolingUnit parallel)
+-Split component status in two loops, one for Cooling Unit and one for Temperature sensor
+-Sum for amount of components:
+sum amount:ComponentsTempSens 
+sum broken:TemperatureSensorWorking
