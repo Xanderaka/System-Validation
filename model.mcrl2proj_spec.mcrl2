@@ -9,21 +9,15 @@ sort AlarmStatus = struct Critical | Functional;
      CoolingSystem = struct On | Off;
 	 TemperatureStatus = struct Above | EqualOrBelow;
 	 ButtonType = struct Start | Stop | Reset | Up | Down;
-     CoolingUnitWorking = Bool;
-	 TemperatureSensorWorking = Bool;
-	 NumberOfCoolingUnits = struct one | two |three;
  
 map AmountCoolingUnitsWorking: Nat;
 
 eqn AmountCoolingUnitsWorking = 0;
 
-act SoundAlarm, ResetAlarm: AlarmStatus;
-	IndicateCoolingSystem: IndicatorCoolingSystem;
+act IndicateCoolingSystem: IndicatorCoolingSystem;
 	IndicateBrokenCoolingUnit: IndicatorBrokenCoolingUnit;
 	IndicateBrokenTemperatureSensor: IndicatorBrokenTemperatureSensor; 
-	ReceiveStatusCoolingUnit, SendStatusCoolingUnit: CoolingUnitStatus;
 	ReceiveButton: ButtonType;
-	ReceiveStatusTemperatureSensor, SendStatusTemperatureSensor: TemperatureSensorStatus;
 	StartCoolingUnit, StopCoolingUnit, CheckTemperatureLevels, RequestCoolingUnitStatus, RequestTemperatureSensorStatus, GoCritical;
 	ReceiveTemperature: TemperatureStatus;
 	TurnCoolingSystem: CoolingSystem;
