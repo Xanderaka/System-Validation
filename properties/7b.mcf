@@ -1,0 +1,1 @@
+[true*.RequestTemperatureSensorStatus(SomeAreBroken).!IndicateBrokenTemperatureSensor(OrangeColor)]false

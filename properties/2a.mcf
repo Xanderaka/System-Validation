@@ -1,0 +1,1 @@
+[true*.ReceiveTemperature(Above).ReceiveButton(Down).!StartCoolingUnit]false

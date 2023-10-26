@@ -1,1 +1,1 @@
-[true*.ResetPressed.!SoundAlarm(IsReset)*]false
+[true*.ReceiveButton(Reset).!SoundAlarm(Functional)*.!SoundAlarm(Functional)]false

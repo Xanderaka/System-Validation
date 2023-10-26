@@ -1,1 +1,1 @@
-[true*.ResetPressed.!IndicateBrokenCoolingUnit(ColorGray)*]false
+[true*.ReceiveButton(Reset).!IndicateBrokenCoolingUnit(ColorGray).!IndicateBrokenCoolingUnit(ColorGray)*.!IndicateBrokenCoolingUnit(ColorGray)]false
