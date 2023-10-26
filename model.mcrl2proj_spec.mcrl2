@@ -13,7 +13,7 @@ act SoundAlarm: AlarmStatus;
 	IndicateBrokenCoolingUnit: IndicatorBrokenCoolingUnit;
 	IndicateBrokenTemperatureSensor: IndicatorBrokenTemperatureSensor; 
 	ReceiveButton: ButtonType;
-	StartCoolingUnit, StopCoolingUnit, CheckTemperatureLevels;
+	StartCoolingUnit, StopCoolingUnit, CheckTemperatureLevels, SwitchToFunctionalComponent;
 	ReceiveTemperature: TemperatureStatus;
 	TurnCoolingSystem: CoolingSystem;
 	RequestCoolingUnitStatus: CoolingUnitComponentStatus;
@@ -22,11 +22,11 @@ act SoundAlarm: AlarmStatus;
 
 proc System(systemStatus:CoolingSystem, alarm:AlarmStatus) = 
 	 	(systemStatus==Off) -> (ReceiveButton(Start).TurnCoolingSystem(On).IndicateCoolingSystem(Green).System(systemStatus=On)+ReceiveButton(Stop).TurnCoolingSystem(Off).System(Off,Functional)) <> %if start is pressed
-	 	((systemStatus==On) -> ((alarm==Critical)-> ((ReceiveButton(Stop).TurnCoolingSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off))+(ReceiveButton(Reset).SoundAlarm(Functional). IndicateBrokenCoolingUnit(ColorGray).IndicateBrokenCoolingUnit(ColorGray).(RequestCoolingUnitStatus(NoneBroken).CheckCoolingUnitStatus(NoneBroken)+RequestCoolingUnitStatus(SomeBroken).CheckCoolingUnitStatus(SomeBroken)+RequestCoolingUnitStatus(AllBroken).CheckCoolingUnitStatus(AllBroken))))) + (alarm!=Critical) -> (RequestCoolingUnitStatus(NoneBroken).CheckCoolingUnitStatus(NoneBroken)+RequestCoolingUnitStatus(SomeBroken).CheckCoolingUnitStatus(SomeBroken)+RequestCoolingUnitStatus(AllBroken).CheckCoolingUnitStatus(AllBroken))+ ReceiveButton(Stop).TurnCoolingSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off)); %if stop is pressed
+	 	((systemStatus==On) -> ((alarm==Critical)-> (ReceiveButton(Stop).TurnCoolingSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off)+(ReceiveButton(Reset).SoundAlarm(Functional). IndicateBrokenCoolingUnit(ColorGray).IndicateBrokenTemperatureSensor(GrayColor).(RequestCoolingUnitStatus(NoneBroken).CheckCoolingUnitStatus(NoneBroken)+RequestCoolingUnitStatus(SomeBroken).CheckCoolingUnitStatus(SomeBroken)+RequestCoolingUnitStatus(AllBroken).CheckCoolingUnitStatus(AllBroken))))) + (alarm!=Critical) -> (RequestCoolingUnitStatus(NoneBroken).CheckCoolingUnitStatus(NoneBroken)+RequestCoolingUnitStatus(SomeBroken).CheckCoolingUnitStatus(SomeBroken)+RequestCoolingUnitStatus(AllBroken).CheckCoolingUnitStatus(AllBroken))+ ReceiveButton(Stop).TurnCoolingSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off)); %if stop is pressed
 
 	 CheckCoolingUnitStatus(coolingUnit: CoolingUnitComponentStatus)=
 		(coolingUnit==NoneBroken) -> (RequestTemperatureSensorStatus(NoneAreBroken).CheckTemperatureSensor(NoneAreBroken) +RequestTemperatureSensorStatus(SomeAreBroken).CheckTemperatureSensor(SomeAreBroken) + RequestTemperatureSensorStatus(AllAreBroken).CheckTemperatureSensor(AllAreBroken)) +
-		(coolingUnit==SomeBroken) -> (IndicateBrokenCoolingUnit(ColorOrange).(RequestTemperatureSensorStatus(NoneAreBroken).CheckTemperatureSensor(NoneAreBroken) +RequestTemperatureSensorStatus(SomeAreBroken).CheckTemperatureSensor(SomeAreBroken) + RequestTemperatureSensorStatus(AllAreBroken).CheckTemperatureSensor(AllAreBroken))) +
+		(coolingUnit==SomeBroken) -> (IndicateBrokenCoolingUnit(ColorOrange).SwitchToFunctionalComponent.(RequestTemperatureSensorStatus(NoneAreBroken).CheckTemperatureSensor(NoneAreBroken) +RequestTemperatureSensorStatus(SomeAreBroken).CheckTemperatureSensor(SomeAreBroken) + RequestTemperatureSensorStatus(AllAreBroken).CheckTemperatureSensor(AllAreBroken))) +
 		(coolingUnit==AllBroken) -> (SoundAlarm(Critical).System(On,Critical));
 
 

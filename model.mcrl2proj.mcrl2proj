@@ -2,7 +2,7 @@
  <spec>model.mcrl2proj_spec.mcrl2</spec>
  <properties>
   <property>Deadlock free</property>
-  <property>11</property>
+  <property>11a</property>
   <property>9a</property>
   <property>9b</property>
   <property>9c</property>
@@ -18,5 +18,7 @@
   <property>7a</property>
   <property>7b</property>
   <property>8b</property>
+  <property>10</property>
+  <property>11b</property>
  </properties>
 </root>

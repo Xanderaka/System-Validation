@@ -1,1 +1,1 @@
-[true*.ReceiveButton(Reset).!IndicateBrokenTemperatureSensor(GrayColor)*.!IndicateBrokenTemperatureSensor(GrayColor)]false
+[true*.ReceiveButton(Reset).!IndicateBrokenTemperatureSensor(GrayColor).!IndicateBrokenTemperatureSensor(GrayColor)+.!IndicateBrokenTemperatureSensor(GrayColor)]false

@@ -1,0 +1,1 @@
+[true*.SoundAlarm(Critical).!ReceiveButton(Reset)*.!ReceiveButton(Reset)]false
