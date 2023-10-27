@@ -12,6 +12,10 @@ sort AlarmStatus = struct Critical | Functional;
 	 TemperatureSensorWorking = Bool;
 	 NumberOfCoolingUnits = struct one | two | three;	
 
+map plus: Nat -> Pos;
+var x:Nat;
+eqn plus(x) = succ(x);
+
 act SoundAlarm, ResetAlarm: AlarmStatus;
 	IndicateCoolingSystem: IndicatorCoolingSystem;
 	IndicateBrokenCoolingUnit: IndicatorBrokenCoolingUnit;
@@ -19,7 +23,7 @@ act SoundAlarm, ResetAlarm: AlarmStatus;
 	ReceiveStatusCoolingUnit, SendStatusCoolingUnit: CoolingUnitStatus;
 	ReceiveButton: ButtonType;
 	ReceiveStatusTemperatureSensor, SendStatusTemperatureSensor: TemperatureSensorStatus;
-	StartCoolingUnit, StopCoolingUnit, CheckTemperatureLevels, RequestCoolingUnitStatus, RequestTemperatureSensorStatus, GoCritical, PickOtherCoolingUnit, WorkingComponent, checkComponent;
+	StartCoolingUnit, StopCoolingUnit, CheckTemperatureLevels, RequestCoolingUnitStatus, RequestTemperatureSensorStatus, GoCritical, PickOtherCoolingUnit, WorkingComponent, BrokenComponent,checkComponent;
 	ReceiveTemperature: TemperatureStatus;
 	TurnCoolingSystem: CoolingSystem;
 
@@ -31,13 +35,12 @@ proc System(systemStatus:CoolingSystem, alarm:AlarmStatus) =
 %		(coolingUnit==NoneBroken) -> (RequestTemperatureSensorStatus.(CheckTemperatureSensor(NoneAreBroken) + CheckTemperatureSensor(SomeAreBroken) + CheckTemperatureSensor(AllAreBroken))) +
 %		(coolingUnit==SomeBroken) -> (IndicateBrokenCoolingUnit(ColorOrange).(RequestTemperatureSensorStatus.(CheckTemperatureSensor(NoneAreBroken) + CheckTemperatureSensor(SomeAreBroken) + CheckTemperatureSensor(AllAreBroken)))) +
 %		(coolingUnit==AllBroken) -> (GoCritical.System(On,Critical))
-		(total != 3)->(sum amount:NumberOfCoolingUnits.(
-			(((working1 == true) -> WorkingComponent.CheckCoolingUnitStatus(working1 = false, (check+1),(total+1))) +
-			((working2 == true) -> WorkingComponent.CheckCoolingUnitStatus(working2 = false, (check+1),(total+1))) +
-			((working3 == true) -> WorkingComponent.CheckCoolingUnitStatus(working3 = false, (check+1),(total+1)))))) <>
-		((GoCritical.System(On,Critical)) + 
-		(RequestTemperatureSensorStatus.(CheckTemperatureSensor(NoneAreBroken) + CheckTemperatureSensor(SomeAreBroken) + CheckTemperatureSensor(AllAreBroken))) +
-		(IndicateBrokenCoolingUnit(ColorOrange).(RequestTemperatureSensorStatus.(CheckTemperatureSensor(NoneAreBroken) + CheckTemperatureSensor(SomeAreBroken) + CheckTemperatureSensor(AllAreBroken)))));
+		(total != 3)->(sum amount:NumberOfCoolingUnits.
+			(working1 == true) -> (WorkingComponent.CheckCoolingUnitStatus(working1 = false, check = plus(check),total = plus(total)))<> BrokenComponent+
+			(working2 == true) -> WorkingComponent.CheckCoolingUnitStatus(working2 = false, check = plus(check),total = plus(total)) +
+			(working3 == true) -> WorkingComponent.CheckCoolingUnitStatus(working3 = false, check = plus(check),total = plus(total))) <>
+		((check == 0)->(GoCritical.System(On,Critical)) + 
+		(check==3)->(RequestTemperatureSensorStatus.(CheckTemperatureSensor(NoneAreBroken))) + (check==1 || check == 2)->(IndicateBrokenCoolingUnit(ColorOrange).(RequestTemperatureSensorStatus.(CheckTemperatureSensor(NoneAreBroken) + CheckTemperatureSensor(SomeAreBroken) + CheckTemperatureSensor(AllAreBroken)))));
 
 
 	CheckTemperatureSensor(temperatureSensor: TemperatureSensorComponentStatus)=
