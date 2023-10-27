@@ -13,7 +13,7 @@ act SoundAlarm: AlarmStatus;
 	IndicateBrokenCoolingUnit: IndicatorBrokenCoolingUnit;
 	IndicateBrokenTemperatureSensor: IndicatorBrokenTemperatureSensor; 
 	ReceiveButton: ButtonType;
-	StartCoolingUnit, StopCoolingUnit, CheckTemperatureLevels, SwitchToFunctionalComponent;
+	StartCoolingUnit, StopCoolingUnit, CheckTemperatureLevels, SwitchToFunctionalComponent, a;
 	ReceiveTemperature: TemperatureStatus;
 	TurnCoolingSystem: CoolingSystem;
 	RequestCoolingUnitStatus: CoolingUnitComponentStatus;
@@ -29,6 +29,10 @@ proc System(systemStatus:CoolingSystem, alarm:AlarmStatus) =
 		(coolingUnit==SomeBroken) -> (IndicateBrokenCoolingUnit(ColorOrange).SwitchToFunctionalComponent.(RequestTemperatureSensorStatus(NoneAreBroken).CheckTemperatureSensor(NoneAreBroken) +RequestTemperatureSensorStatus(SomeAreBroken).CheckTemperatureSensor(SomeAreBroken) + RequestTemperatureSensorStatus(AllAreBroken).CheckTemperatureSensor(AllAreBroken))) +
 		(coolingUnit==AllBroken) -> (SoundAlarm(Critical).System(On,Critical));
 
+	parallel = p1||p2;
+
+	p1 = a.parallel;
+	p2 = a.parallel;
 
 	CheckTemperatureSensor(temperatureSensor: TemperatureSensorComponentStatus)=
 		(temperatureSensor==NoneAreBroken) -> (CheckTemperatureLevels.(ReceiveTemperature(Above).RegulateTemperature(Above)+RegulateTemperature(EqualOrBelow)))+
@@ -39,4 +43,4 @@ proc System(systemStatus:CoolingSystem, alarm:AlarmStatus) =
 		(status==Above) -> ((ReceiveButton(Down).StartCoolingUnit+StartCoolingUnit).System(On,Functional) + ReceiveButton(Up).(RegulateTemperature(EqualOrBelow) + RegulateTemperature(Above))) +
 		(status==EqualOrBelow) -> ((ReceiveButton(Up).StopCoolingUnit+StopCoolingUnit).(RequestCoolingUnitStatus(NoneBroken).CheckCoolingUnitStatus(NoneBroken)+RequestCoolingUnitStatus(SomeBroken).CheckCoolingUnitStatus(SomeBroken)+RequestCoolingUnitStatus(AllBroken).CheckCoolingUnitStatus(AllBroken)) + (ReceiveButton(Down).(RegulateTemperature(EqualOrBelow)+RegulateTemperature(Above))));
 
-init System(Off, Functional); 
+init parallel; 
