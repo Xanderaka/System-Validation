@@ -1,1 +1,1 @@
-[true*.ReceiveButton(Start).!TurnCoolingSystem(On)]false
+[true*.ButtonStatus(Start).!TurnCoolingSystem(On)]false
