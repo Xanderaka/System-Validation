@@ -8,8 +8,6 @@ sort AlarmStatus = struct Critical | Functional;
 	 TemperatureStatus = struct Above | EqualOrBelow;
 	 ButtonType = struct Start | Stop | Reset | Up | Down;
 
-glob error:Bool;
-
 act SoundAlarm: AlarmStatus;
 	IndicateCoolingSystem,CoolingIndicate1,CoolingIndicate2,CoolingIndicate3: IndicatorCoolingSystem;
 	IndicateBrokenCoolingUnit: IndicatorBrokenCoolingUnit;
@@ -40,7 +38,7 @@ proc System1(systemStatus:CoolingSystem, alarm:Bool) =
 	 CheckCoolingUnitStatus(coolingUnit: CoolingUnitComponentStatus)=
 		(coolingUnit==NoneBroken) -> SendAlarmStatus(Functional).System1(On,false) +
 		(coolingUnit==SomeBroken) -> (IndicateBrokenCoolingUnit(ColorOrange).SwitchToFunctionalComponent.SendAlarmStatus(Functional).System1(On,false)) +
-		(coolingUnit==AllBroken) -> SoundAlarm(Critical).System1(On,true);
+		(coolingUnit==AllBroken) -> SoundAlarm(Critical).SendAlarmStatus(Critical).System1(On,true);
 
 	CheckTemperatureSensorStatus(temperatureSensor: TemperatureSensorComponentStatus)=
 		(temperatureSensor==NoneAreBroken) -> System2(On,false) + 
