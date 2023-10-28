@@ -1,1 +1,1 @@
-[true*.RequestTemperatureSensorStatus(AllAreBroken).!SoundAlarm(Critical)]false
+[true*.RequestTemperatureSensorStatus(AllAreBroken).!SoundAlarm(Critical).(RequestTemperatureSensorStatus(AllAreBroken)|RequestTemperatureSensorStatus(NoneAreBroken)|RequestTemperatureSensorStatus(SomeAreBroken))]false

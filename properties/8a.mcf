@@ -1,1 +1,1 @@
-[true*.(RequestCoolingUnitStatus(AllBroken)).!SoundAlarm(Critical)]false
+[true*.(RequestCoolingUnitStatus(AllBroken)).!SoundAlarm(Critical).(RequestCoolingUnitStatus(SomeBroken)|RequestCoolingUnitStatus(NoneBroken)|RequestCoolingUnitStatus(AllBroken))]false

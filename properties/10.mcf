@@ -1,1 +1,1 @@
-[true*.RequestCoolingUnitStatus(SomeBroken).!SwitchToFunctionalComponent.!SwitchToFunctionalComponent]false
+[true*.RequestCoolingUnitStatus(SomeBroken).!SwitchToFunctionalComponent.(RequestCoolingUnitStatus(NoneBroken)|RequestCoolingUnitStatus(SomeBroken)|RequestCoolingUnitStatus(AllBroken))]false

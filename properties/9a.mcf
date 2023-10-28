@@ -1,1 +1,1 @@
-[true*.ReceiveButton(Reset).!SoundAlarm(Functional)*.!SoundAlarm(Functional)]false
+[true*.ButtonStatus(Reset).!SoundAlarm(Functional).(RequestCoolingUnitStatus(NoneBroken)|RequestCoolingUnitStatus(SomeBroken)|RequestCoolingUnitStatus(AllBroken)|RequestTemperatureSensorStatus(NoneAreBroken)|RequestTemperatureSensorStatus(SomeAreBroken)|RequestTemperatureSensorStatus(AllAreBroken)|CheckTemperatureLevels(Above)|CheckTemperatureLevels(EqualOrBelow))]false

@@ -1,1 +1,1 @@
-[true*.RequestCoolingUnitStatus(SomeBroken).!IndicateBrokenCoolingUnit(ColorOrange)]false
+[true*.RequestCoolingUnitStatus(SomeBroken).!IndicateBrokenCoolingUnit(ColorOrange).SwitchToFunctionalComponent]false

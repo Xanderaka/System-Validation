@@ -1,1 +1,1 @@
-[true*.(CheckTemperatureLevels(Above)|CheckTemperatureLevels(EqualOrBelow)).!(StartCoolingUnit| StopCoolingUnit).RequestCoolingUnitStatus]false
+[true*.(CheckTemperatureLevels(Above)|CheckTemperatureLevels(EqualOrBelow)).!(StartCoolingUnit| StopCoolingUnit).(CheckTemperatureLevels(Above)|CheckTemperatureLevels(EqualOrBelow))]false

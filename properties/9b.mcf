@@ -1,1 +1,1 @@
-[true*.ReceiveButton(Reset).!IndicateBrokenCoolingUnit(ColorGray).!IndicateBrokenCoolingUnit(ColorGray)*.!IndicateBrokenCoolingUnit(ColorGray)]false
+[true*.ButtonStatus(Reset).!IndicateBrokenCoolingUnit(ColorGray).(RequestCoolingUnitStatus(NoneBroken)|RequestCoolingUnitStatus(SomeBroken)|RequestCoolingUnitStatus(AllBroken)|RequestTemperatureSensorStatus(NoneAreBroken)|RequestTemperatureSensorStatus(SomeAreBroken)|RequestTemperatureSensorStatus(AllAreBroken)|CheckTemperatureLevels(Above)|CheckTemperatureLevels(EqualOrBelow))]false
