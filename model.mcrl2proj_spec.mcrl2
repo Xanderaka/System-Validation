@@ -20,7 +20,7 @@ act SoundAlarm: AlarmStatus;
 	RequestCoolingUnitStatus: CoolingUnitComponentStatus;
 	RequestTemperatureSensorStatus: TemperatureSensorComponentStatus;
 	SendCoolingSystemStatus, ReceiveCoolingSystemStatus, CoolingSystemStatus: CoolingSystem;
-	SendAlarmStatus, ReceiveAlarmStatus, StatusAlarm: AlarmStatus;
+	SendAlarmStatus, ReceiveAlarmStatus, StatusAlarm, ReceiveAlarmStatus2, ReceiveAlarmStatus3: AlarmStatus;
 	CheckTemperatureLevels: TemperatureStatus;
 	
 
@@ -56,5 +56,4 @@ init allow({TurnCoolingSystem,ButtonStatus,IndicateCoolingSystem,IndicateCooling
 	 comm ({Button1|Button2|Button3->ButtonStatus,
 			SendCoolingAction1|SendCoolingAction3|SendCoolingAction2->TurnCoolingSystem,
 	 	 	CoolingIndicate1|CoolingIndicate2|CoolingIndicate3->IndicateCoolingSystem,
-			SendAlarmStatus|ReceiveAlarmStatus->StatusAlarm,
-			SendCoolingSystemStatus|ReceiveCoolingSystemStatus->CoolingSystemStatus},SystemCoolingUnit(Off, Functional)||SystemTempSensor(Off,Functional)||SystemRegulateTemp(Off,Functional)));    
+			SendAlarmStatus|ReceiveAlarmStatus->StatusAlarm},SystemCoolingUnit(Off, Functional)||SystemTempSensor(Off,Functional)||SystemRegulateTemp(Off,Functional)));    
