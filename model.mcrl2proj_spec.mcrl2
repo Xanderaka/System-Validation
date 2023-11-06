@@ -55,7 +55,7 @@ proc System1(systemStatus:CoolingSystem, alarm:Bool) =
 		(temperatureSensor==AllAreBroken) -> SoundAlarm(Critical).System2(On,true);
 
 	RegulateTemperature(SetTemp: Int) = 
-	 (mean(TempSens1,TempSens2,TempSens3)>SetTemp)->(StartCoolingUnit.RegulateTemperature(SetTemp-1))<>(StopCoolingUnit.RegulateTemperature(SetTemp+1))+(SetTemp<-1 && SetTemp>-30)->( TempButton(Up).RegulateTemperature(SetTemp+1)) + 
+	 (mean(TempSens1,TempSens2,TempSens3)>SetTemp)->(StartCoolingUnit.RegulateTemperature(SetTemp))<>(StopCoolingUnit.RegulateTemperature(SetTemp))+(SetTemp<-1 && SetTemp>-30)->( TempButton(Up).RegulateTemperature(SetTemp+1)) + 
 	 (SetTemp>-29 && SetTemp<0)->(TempButton(Down).RegulateTemperature(SetTemp-1));
 
 init allow({TurnCoolingSystem,ButtonStatus,IndicateCoolingSystem,IndicateCoolingSystem,RequestTemperatureSensorStatus,
