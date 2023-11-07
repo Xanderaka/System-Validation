@@ -65,7 +65,7 @@ proc System1(systemStatus:CoolingSystem, alarm:Bool) =
 		sum k:Nat . ((k<noCoolingUnits)->((k==0)->(!check1)->(NotBrokenCool(k).CheckCoolingUnitStatus(check1=true,Total=Total+1)		
 		+BrokenCool(k).CheckCoolingUnitStatus(check1=true,noBroken=noBroken+1,Total=Total+1,BrokenComp=push(k,BrokenComp))) + (k==1)->(!check2)
 		->(NotBrokenCool(k).CheckCoolingUnitStatus(check2=true,Total=Total+1)
-		+BrokenCool(k).CheckCoolingUnitStatus(check2=true,noBroken=noBroken+1,Total=Total+1,BrokenComp=push(k,BrokenComp))))) + (Total==2)->((noBroken==0)
+		+BrokenCool(k).CheckCoolingUnitStatus(check2=true,noBroken=noBroken+1,Total=Total+1,BrokenComp=push(k,BrokenComp))))) + (Total==noCoolingUnits)->((noBroken==0)
 		->NoneBroken.CheckCoolingUnitStatus(false,false,0,0,[]) + 
 		(noBroken==1)->SomeBroken. sum j:Nat.(j<noCoolingUnits)->(!(j in BrokenComp))->SwitchToFunctionalComponent(j).CheckCoolingUnitStatus(false,false,0,0,[]) + 
 		(noBroken==2)->AllBroken.CheckCoolingUnitStatus(false,false,0,0,[]));
@@ -76,7 +76,7 @@ proc System1(systemStatus:CoolingSystem, alarm:Bool) =
 		->(NotBrokenTemp(k).CheckTemperatureSensorStatus(check2=true,Total=Total+1)
 		+BrokenTemp(k).CheckTemperatureSensorStatus(check2=true,noBroken=noBroken+1,Total=Total+1,BrokenComp=push(k,BrokenComp)))+(k==2)->(!check3)
 		->(NotBrokenTemp(k).CheckTemperatureSensorStatus(check3=true,Total=Total+1)
-		+BrokenTemp(k).CheckTemperatureSensorStatus(check3=true,noBroken=noBroken+1,Total=Total+1,BrokenComp=push(k,BrokenComp))))) + (Total==3)->((noBroken==0)
+		+BrokenTemp(k).CheckTemperatureSensorStatus(check3=true,noBroken=noBroken+1,Total=Total+1,BrokenComp=push(k,BrokenComp))))) + (Total==noTempSensor)->((noBroken==0)
 		->NoneBroken.CheckTemperatureSensorStatus(false,false,false,0,0,[]) + 
 		(noBroken==1&&noBroken==2)->SomeBroken.CheckTemperatureSensorStatus(false,false,false,0,0,[]) + 
 		(noBroken==3)->AllBroken.CheckTemperatureSensorStatus(false,false,false,0,0,[]));
