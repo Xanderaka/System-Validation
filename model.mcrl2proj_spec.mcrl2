@@ -39,11 +39,12 @@ act SoundAlarm: Bool;
 proc System(systemStatus:CoolingSystem) = 
 	 	(systemStatus==Off) -> SendSystemStatus(systemStatus).(ButtonPressed(Start).TurnCoolingSystem(On).IndicateCoolingSystem(Green).System(systemStatus=On)+
 		ButtonPressed(Stop).TurnCoolingSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off)) 
-		<>(sum error:Bool . ReceiveAlarmStatus(error).(!error)->(SoundAlarm(false).(SendSystemStatus(systemStatus).System()
-		+ButtonPressed(Reset).IndicateBrokenTemperatureSensor(GrayColor).IndicateBrokenCoolingUnit(ColorGray).SendReset(Reset).System(systemStatus=On)
-		+ButtonPressed(Stop).TurnCoolingSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off)))<>(SoundAlarm(true).(InCritical.System(systemStatus=Error)
+		<>(sum error:Bool . ReceiveAlarmStatus(error).(!error)->(SendSystemStatus(systemStatus).System()
+		+ButtonPressed(Reset)
+		.IndicateBrokenTemperatureSensor(GrayColor).IndicateBrokenCoolingUnit(ColorGray).SendReset(Reset).SoundAlarm(false).System(systemStatus=On)
+		+ButtonPressed(Stop).TurnCoolingSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off))<>(SoundAlarm(true).(InCritical.System(systemStatus=Error)
 		+SendSystemStatus(Error).System(systemStatus=Error) + 
-		ButtonPressed(Reset).SendReset(Reset).System(systemStatus=On)))); %if stop is pressed
+		ButtonPressed(Reset).SendReset(Reset).SoundAlarm(false).System(systemStatus=On)))); %if stop is pressed
 
 	 CheckCoolingUnitStatus(check1:Bool,check2:Bool,noBroken:Nat,Total:Nat,BrokenComp:List(Nat),busy:Bool,error:Bool)=
 		SendAlarmStatus(error).CheckCoolingUnitStatus() + (ReceiveReset1(Reset) . CheckCoolingUnitStatus(error=false)) + 
