@@ -1,5 +1,4 @@
-sort AlarmStatus = struct Critical | Functional;
-     IndicatorCoolingSystem = struct Green | Red;
+sort IndicatorCoolingSystem = struct Green | Red;
 	 IndicatorBrokenCoolingUnit = struct ColorGray | ColorOrange;
 	 IndicatorBrokenTemperatureSensor = struct GrayColor | OrangeColor;
      CoolingSystem = struct On | Off;
@@ -23,14 +22,13 @@ map mean:Int#Int#Int->Int;
 var D,E,F:Int;
 eqn mean(D,E,F) = round((D+E+F)/3);
 
-act SoundAlarm: AlarmStatus;
-	IndicateCoolingSystem: IndicatorCoolingSystem;
+act IndicateCoolingSystem: IndicatorCoolingSystem;
 	IndicateBrokenCoolingUnit: IndicatorBrokenCoolingUnit;
 	IndicateBrokenTemperatureSensor: IndicatorBrokenTemperatureSensor; 
 	ButtonPressed: ButtonType;
 	StartCoolingUnit, StopCoolingUnit;
 	TurnCoolingSystem: CoolingSystem;
-	SendAlarmStatus, ReceiveAlarmStatus, StatusAlarm: AlarmStatus;
+	SendAlarmStatusCool, ReceiveAlarmStatusCool1,ReceiveAlarmStatusCool3,ReceiveAlarmStatusCool2, StatusAlarm: Bool;
 	NoneBroken,SomeBroken,AllBroken,InCritical;
 	BrokenCool,NotBrokenCool,BrokenTemp,NotBrokenTemp,SwitchToFunctionalComponent:Nat;
 	SendSystemStatus,ReceiveSystemStatus1,ReceiveSystemStatus2,ReceiveSystemStatus3,StatusSystem: CoolingSystem;
@@ -41,7 +39,7 @@ proc System(systemStatus:CoolingSystem, alarm:Bool) =
 	 	(systemStatus==Off) -> SendSystemStatus(systemStatus).(ButtonPressed(Start).TurnCoolingSystem(On).IndicateCoolingSystem(Green).System(systemStatus=On)+
 		ButtonPressed(Stop).TurnCoolingSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off)) 
 		<>((systemStatus==On) -> SendSystemStatus(systemStatus).(!alarm)->(System()
-		+ButtonPressed(Reset).IndicateBrokenTemperatureSensor(GrayColor).IndicateBrokenCoolingUnit(ColorGray).SoundAlarm(Functional).System()
+		+ButtonPressed(Reset).IndicateBrokenTemperatureSensor(GrayColor).IndicateBrokenCoolingUnit(ColorGray).System()
 		+ButtonPressed(Stop).TurnCoolingSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off))<>(InCritical.ButtonPressed(Reset))); %if stop is pressed
 
 	 CheckCoolingUnitStatus(check1:Bool,check2:Bool,noBroken:Nat,Total:Nat,BrokenComp:List(Nat),busy:Bool)=
@@ -73,9 +71,9 @@ proc System(systemStatus:CoolingSystem, alarm:Bool) =
 
 init allow({TurnCoolingSystem,ButtonPressed,IndicateCoolingSystem,StatusSystem,
 			StatusAlarm,StartCoolingUnit,StopCoolingUnit,
-			SoundAlarm,SwitchToFunctionalComponent,IndicateBrokenCoolingUnit,IndicateBrokenTemperatureSensor,InCritical,
+			SwitchToFunctionalComponent,IndicateBrokenCoolingUnit,IndicateBrokenTemperatureSensor,InCritical,
 			NoneBroken,SomeBroken,AllBroken,BrokenCool,NotBrokenCool,BrokenTemp,NotBrokenTemp,
 			SystemStillOn},
-	 comm ({SendAlarmStatus|ReceiveAlarmStatus->StatusAlarm,
+	 comm ({SendAlarmStatusCool|ReceiveAlarmStatusCool1|ReceiveAlarmStatusCool2|ReceiveAlarmStatusCool3->StatusAlarm,
 			SendSystemStatus|ReceiveSystemStatus1|ReceiveSystemStatus2|ReceiveSystemStatus3->StatusSystem}
 			,System(Off, false)||CheckCoolingUnitStatus(false,false,0,0,[],false)||CheckTemperatureSensorStatus(false,false,false,0,0,[],false)||RegulateTemperature(-5,false)));  
