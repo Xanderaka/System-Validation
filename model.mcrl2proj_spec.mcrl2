@@ -3,8 +3,10 @@ sort IndicatorCoolingSystem = struct Green | Red;
 	 IndicatorBrokenTemperatureSensor = struct GrayColor | OrangeColor;
      CoolingSystem = struct On | Off | Error;
 	 ButtonType = struct Start | Stop | Reset | Up | Down;
+	 Temperature = Int;
+	 ComponentStatus = struct SomeBroken | NoneBroken | AllBroken;
 
-map TempSens1,TempSens2,TempSens3:Int;
+map TempSens1,TempSens2,TempSens3:Temperature;
 	noCoolingUnits: Nat;
 	noTempSensor: Nat;
 eqn TempSens1 = -20;
@@ -18,8 +20,8 @@ var x: Nat;
 	l: List(Nat);
 eqn push(x,l) = x |> l;
 
-map mean:Int#Int#Int->Int;
-var D,E,F:Int;
+map mean:Temperature#Temperature#Temperature->Temperature;
+var D,E,F:Temperature;
 eqn mean(D,E,F) = round((D+E+F)/3);
 
 act SoundAlarm: Bool;
@@ -28,39 +30,41 @@ act SoundAlarm: Bool;
 	IndicateBrokenTemperatureSensor: IndicatorBrokenTemperatureSensor; 
 	ButtonPressed: ButtonType;
 	StartCoolingUnit, StopCoolingUnit;
-	TurnCoolingSystem: CoolingSystem;
+	TurnMainSystem: CoolingSystem;
 	SendAlarmStatus, ReceiveAlarmStatus, Error: Bool;
-	NoneBroken,SomeBroken,AllBroken,InCritical,ReceiveReset1,ReceiveReset2,SendReset,Reset;
+	InCritical,ReceiveReset1,ReceiveReset2,SendReset,Reset,SystemStillOn;
 	BrokenCool,NotBrokenCool,BrokenTemp,NotBrokenTemp,SwitchToFunctionalComponent:Nat;
 	SendSystemStatus,ReceiveSystemStatus1,ReceiveSystemStatus2,ReceiveSystemStatus3,StatusSystem: CoolingSystem;
-	SystemStillOn;
+	ReceiveMeasuredTemperature, ReceiveSetTemperature: Temperature;
+	StatusCoolingUnits, StatusTemperatureSensors: ComponentStatus;
+	
 	
 
 proc System(systemStatus:CoolingSystem) = 
-	 	(systemStatus==Off) -> SendSystemStatus(systemStatus).(ButtonPressed(Start).TurnCoolingSystem(On).IndicateCoolingSystem(Green).System(systemStatus=On)+
-		ButtonPressed(Stop).TurnCoolingSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off)) 
+	 	(systemStatus==Off) -> SendSystemStatus(systemStatus).(ButtonPressed(Start).TurnMainSystem(On).IndicateCoolingSystem(Green).System(systemStatus=On)+
+		ButtonPressed(Stop).TurnMainSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off)) 
 		<>(sum error:Bool . ReceiveAlarmStatus(error).(!error)->(SendSystemStatus(systemStatus).System()
 		+ButtonPressed(Reset)
 		.IndicateBrokenTemperatureSensor(GrayColor).IndicateBrokenCoolingUnit(ColorGray).SendReset.SoundAlarm(false).System(systemStatus=On)
-		+ButtonPressed(Stop).TurnCoolingSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off))<>(SoundAlarm(true).(InCritical.System(systemStatus=Error)
+		+ButtonPressed(Stop).TurnMainSystem(Off).IndicateCoolingSystem(Red).System(systemStatus=Off))<>(SoundAlarm(true).(InCritical.System(systemStatus=Error)
 		+SendSystemStatus(Error).System(systemStatus=Error) + 
 		ButtonPressed(Reset).SendReset.SoundAlarm(false).System(systemStatus=On)))); %if stop is pressed
 
 	 CheckCoolingUnitStatus(check1:Bool,check2:Bool,noBroken:Nat,Total:Nat,BrokenComp:List(Nat),busy:Bool,error:Bool)=
-		SendAlarmStatus(error).CheckCoolingUnitStatus() + (ReceiveReset1 . CheckCoolingUnitStatus(error=false)) + 
+		(!busy)->(SendAlarmStatus(error).CheckCoolingUnitStatus()) + (!busy)->(ReceiveReset1 . CheckCoolingUnitStatus(error=false)) + 
 		(sum s:CoolingSystem . ((!busy)->(ReceiveSystemStatus1(s))<>((s==On)->SystemStillOn)) . (s==On||busy)->(sum k:Nat . ((k<noCoolingUnits)->((k==0)->(!check1)->
 		(NotBrokenCool(k).CheckCoolingUnitStatus(check1=true,Total=Total+1,busy=true)		
 		+BrokenCool(k).CheckCoolingUnitStatus(check1=true,noBroken=noBroken+1,Total=Total+1,BrokenComp=push(k,BrokenComp),busy=true)) + (k==1)->(!check2)
 		->(NotBrokenCool(k).CheckCoolingUnitStatus(check2=true,Total=Total+1,busy=true)
 		+BrokenCool(k).CheckCoolingUnitStatus(check2=true,noBroken=noBroken+1,Total=Total+1,BrokenComp=push(k,BrokenComp),busy=true)))) + 
 		(Total==noCoolingUnits)->((noBroken==0)
-		->NoneBroken.CheckCoolingUnitStatus(false,false,0,0,[],false,false) + 
-		(noBroken==1)->SomeBroken. sum j:Nat.(j<noCoolingUnits)->(!(j in BrokenComp))->
+		->StatusCoolingUnits(NoneBroken).CheckCoolingUnitStatus(false,false,0,0,[],false,false) + 
+		(noBroken==1)->StatusCoolingUnits(SomeBroken). sum j:Nat.(j<noCoolingUnits)->(!(j in BrokenComp))->
 		SwitchToFunctionalComponent(j).IndicateBrokenCoolingUnit(ColorOrange).CheckCoolingUnitStatus(false,false,0,0,[],false,false) + 
-		(noBroken==2)->AllBroken.SendAlarmStatus(true).CheckCoolingUnitStatus(false,false,0,0,[],false,true)))<>CheckCoolingUnitStatus());
+		(noBroken==2)->StatusCoolingUnits(AllBroken).SendAlarmStatus(true).CheckCoolingUnitStatus(false,false,0,0,[],false,true)))<>CheckCoolingUnitStatus());
 
 	CheckTemperatureSensorStatus(check1:Bool,check2:Bool,check3:Bool,noBroken:Nat,Total:Nat,BrokenComp:List(Nat),busy:Bool,error:Bool)=
-		SendAlarmStatus(error).CheckTemperatureSensorStatus() + (ReceiveReset2 . CheckTemperatureSensorStatus(error=false)) + 
+		(!busy)->(SendAlarmStatus(error).CheckTemperatureSensorStatus()) + (!busy)->(ReceiveReset2 . CheckTemperatureSensorStatus(error=false)) + 
 		(sum s:CoolingSystem . ((!busy)->(ReceiveSystemStatus2(s))<>((s==On)->SystemStillOn)) . (s==On||busy)->( sum k:Nat . ((k<noTempSensor)->((k==0)->(!check1)->
 		(NotBrokenTemp(k).CheckTemperatureSensorStatus(check1=true,Total=Total+1,busy=true)		
 		+BrokenTemp(k).CheckTemperatureSensorStatus(check1=true,noBroken=noBroken+1,Total=Total+1,BrokenComp=push(k,BrokenComp),busy=true)) + (k==1)->(!check2)
@@ -68,21 +72,23 @@ proc System(systemStatus:CoolingSystem) =
 		+BrokenTemp(k).CheckTemperatureSensorStatus(check2=true,noBroken=noBroken+1,Total=Total+1,BrokenComp=push(k,BrokenComp),busy=true))+(k==2)->(!check3)
 		->(NotBrokenTemp(k).CheckTemperatureSensorStatus(check3=true,Total=Total+1,busy=true)
 		+BrokenTemp(k).CheckTemperatureSensorStatus(check3=true,noBroken=noBroken+1,Total=Total+1,BrokenComp=push(k,BrokenComp),busy=true)))) + (Total==noTempSensor)->((noBroken==0)
-		->NoneBroken.CheckTemperatureSensorStatus(false,false,false,0,0,[],false,false) + 
-		(noBroken==1||noBroken==2)->SomeBroken.IndicateBrokenTemperatureSensor(OrangeColor).CheckTemperatureSensorStatus(false,false,false,0,0,[],false,false) + 
-		(noBroken==3)->AllBroken.CheckTemperatureSensorStatus(false,false,false,0,0,[],false,true)))<>CheckTemperatureSensorStatus());
+		->StatusTemperatureSensors(NoneBroken).CheckTemperatureSensorStatus(false,false,false,0,0,[],false,false) + 
+		(noBroken==1||noBroken==2)->StatusTemperatureSensors(SomeBroken).IndicateBrokenTemperatureSensor(OrangeColor).CheckTemperatureSensorStatus(false,false,false,0,0,[],false,false) + 
+		(noBroken==3)->StatusTemperatureSensors(AllBroken).CheckTemperatureSensorStatus(false,false,false,0,0,[],false,true)))<>CheckTemperatureSensorStatus());
 
-	RegulateTemperature(SetTemp: Int,busy:Bool) = 
-	 	sum s:CoolingSystem . ((!busy)->(ReceiveSystemStatus3(s))<>((s==On)->SystemStillOn)) . (s==On||busy)->((mean(TempSens1,TempSens2,TempSens3)>SetTemp)->(StartCoolingUnit.RegulateTemperature(busy=false))<>
-		(StopCoolingUnit.RegulateTemperature(busy=false))+(SetTemp<-1 && SetTemp>-30)->
-		( ButtonPressed(Up).RegulateTemperature(SetTemp+1,true))+(SetTemp>-29 && SetTemp<0)->(ButtonPressed(Down).RegulateTemperature(SetTemp-1,true)))<>RegulateTemperature();
+	RegulateTemperature(SetTemp: Temperature, MeasuredTemp: Temperature, busy:Bool) = 
+	 	sum s:CoolingSystem . ((!busy)->(ReceiveSystemStatus3(s))<>((s==On)->SystemStillOn)) . (s==On||busy)->(ReceiveSetTemperature(SetTemp).ReceiveMeasuredTemperature(MeasuredTemp)
+		.((MeasuredTemp>SetTemp)->(StartCoolingUnit.RegulateTemperature(MeasuredTemp=MeasuredTemp-1,busy=false))<>
+		(StopCoolingUnit.RegulateTemperature(MeasuredTemp=MeasuredTemp+1,busy=false))+(SetTemp<-1 && SetTemp>-30)->
+		( ButtonPressed(Up).RegulateTemperature(SetTemp=SetTemp+1,busy=true))+(SetTemp>-29 && SetTemp<0)->(ButtonPressed(Down).RegulateTemperature(SetTemp=SetTemp-1,busy=true))))<>RegulateTemperature();
 
-init allow({TurnCoolingSystem,ButtonPressed,IndicateCoolingSystem,StatusSystem,
-			Error,StartCoolingUnit,StopCoolingUnit,
+init allow({TurnMainSystem,ButtonPressed,IndicateCoolingSystem,StatusSystem,
+			Error,StartCoolingUnit,StopCoolingUnit,ReceiveMeasuredTemperature,
 			SwitchToFunctionalComponent,IndicateBrokenCoolingUnit,IndicateBrokenTemperatureSensor,InCritical,
-			NoneBroken,SomeBroken,AllBroken,BrokenCool,NotBrokenCool,BrokenTemp,NotBrokenTemp,
-			SystemStillOn,Reset,SoundAlarm},
+			StatusCoolingUnits,StatusTemperatureSensors,BrokenCool,NotBrokenCool,BrokenTemp,NotBrokenTemp,
+			SystemStillOn,Reset,SoundAlarm,ReceiveSetTemperature},
 	 comm ({SendAlarmStatus|ReceiveAlarmStatus->Error,
 			SendSystemStatus|ReceiveSystemStatus1|ReceiveSystemStatus2|ReceiveSystemStatus3->StatusSystem,
 			ReceiveReset1|ReceiveReset2|SendReset->Reset}
-			,System(Off)||CheckCoolingUnitStatus(false,false,0,0,[],false,false)||CheckTemperatureSensorStatus(false,false,false,0,0,[],false,false)||RegulateTemperature(-5,false)));  
+			,System(Off)||CheckCoolingUnitStatus(false,false,0,0,[],false,false)
+			||CheckTemperatureSensorStatus(false,false,false,0,0,[],false,false)||RegulateTemperature(-5,mean(TempSens1,TempSens2,TempSens3),false)));  

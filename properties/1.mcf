@@ -1,1 +1,1 @@
-[true*.(CheckTemperatureLevels(Above)|CheckTemperatureLevels(EqualOrBelow)).!(StartCoolingUnit| StopCoolingUnit).(CheckTemperatureLevels(Above)|CheckTemperatureLevels(EqualOrBelow))]false
+[true*]mu X(SetTemp:Temperature=1,ReceiveTemp:Temperature=0).forall t,l: Temperature.([ReceiveSetTemperature(t).ReceiveMeasuredTemperature(l)](val(t<l)=> [!StartCoolingUnit]X(t,l)))&&<true>true
