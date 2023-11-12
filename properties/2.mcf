@@ -1,2 +1,2 @@
-[true* . (ButtonPressed(Down) || ButtonPressed(Up))]mu X .exists i:Int. ([!(ReceiveSetTemperature(i))]X &&
-<true>true)
+[true* . (ButtonPressed(Down) || ButtonPressed(Up))]mu X .forall i:Int. val(i<1&&i>-31)=>(([!(ReceiveSetTemperature(i))]X &&
+<true>true))
