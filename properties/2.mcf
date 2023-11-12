@@ -1,0 +1,2 @@
+[true* . (ButtonPressed(Down) || ButtonPressed(Up))]mu X .exists i:Int. ([!(ReceiveSetTemperature(i))]X &&
+<true>true)

@@ -1,1 +1,1 @@
-[true*.TurnCoolingSystem(On).!IndicateCoolingSystem(Green)]false
+[true* . TurnMainSystem(On)]mu X . ([IndicateMainSystem(Green)]X ? ?true?true)

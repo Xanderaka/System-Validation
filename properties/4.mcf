@@ -1,1 +1,1 @@
-[true*.ButtonStatus(Start).!TurnCoolingSystem(On)]false
+ [true* . ButtonPressed(Start) . !TurnMainSystem(On)] false

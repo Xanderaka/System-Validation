@@ -1,1 +1,1 @@
-[true*.ButtonStatus(Stop).!TurnCoolingSystem(Off)]false
+[true* . ButtonPressed(Stop)] mu X . ([!(TurnMainSystem(Off))]X && <true>true)
