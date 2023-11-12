@@ -49,6 +49,7 @@ proc System(systemStatus:CoolingSystem, alarm:Bool) =
 		.IndicateBrokenCoolingUnit(Gray).SoundAlarm(false).System()
 		+ButtonPressed(Stop).TurnMainSystem(Off).IndicateMainSystem(Red)
 		.System(systemStatus=Off))<>(InCritical.ButtonPressed(Reset)));
+
 %Process that checks the status of all the cooling units and makes a decision based on that
 	 CheckCoolingUnitStatus(check1:Bool,check2:Bool,noBroken:Nat,Total:Nat,BrokenComp:List(Nat),busy:Bool)=
 		sum s:CoolingSystem . ((!busy)->(ReceiveSystemStatus1(s))<>(s==On)->(BusyWithTask))
@@ -64,6 +65,7 @@ proc System(systemStatus:CoolingSystem, alarm:Bool) =
 		->SwitchToFunctionalCoolingUnit(j).IndicateBrokenCoolingUnit(Orange).CheckCoolingUnitStatus(false,false,0,0,[],false)
 		+(noBroken==2)->StatusCoolingUnits(AllBroken).SoundAlarm(true)
 		.CheckCoolingUnitStatus(false,false,0,0,[],false)))<>CheckCoolingUnitStatus();
+
 %Process that checks the status of all the temperature sensor and makes a decision based on that
 	CheckTemperatureSensorStatus(check1:Bool,check2:Bool,check3:Bool,noBroken:Nat,Total:Nat,BrokenComp:List(Nat),busy:Bool)=
 		sum s:CoolingSystem . ((!busy)->(ReceiveSystemStatus2(s))<>(s==On)->(BusyWithTask))
@@ -82,6 +84,7 @@ proc System(systemStatus:CoolingSystem, alarm:Bool) =
 		.CheckTemperatureSensorStatus(false,false,false,0,0,[],false)
 		+(noBroken==3)->StatusTemperatureSensors(AllBroken).SoundAlarm(true)
 		.CheckTemperatureSensorStatus(false,false,false,0,0,[],false)))<>CheckTemperatureSensorStatus();
+
 %Process that tries to keep the temperature inside the main system on the desired level
 	RegulateTemperature(SetTemp: Temperature,MeasuredTemp: Temperature,busy:Nat) = 
 	 	(busy<2)->(sum s:CoolingSystem . ((busy !=1)->(ReceiveSystemStatus3(s))<>(s==On)->(BusyWithTask))
